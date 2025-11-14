@@ -1,0 +1,27 @@
+use employeeDB
+
+// Insert sample documents
+db.employee_details.insertMany([
+  { emp_id: 1, emp_name: "Tanvi", dept: "IT", salary: 50000, mobile_no: "9876543210" },
+  { emp_id: 2, emp_name: "Riya", dept: "HR", salary: 40000, mobile_no: "9876543211" },
+  { emp_id: 3, emp_name: "Aman", dept: "Finance", salary: 60000, mobile_no: "9876543212" },
+  { emp_id: 4, emp_name: "Karan", dept: "IT", salary: 55000, mobile_no: "9876543213" },
+  { emp_id: 5, emp_name: "Nisha", dept: "Sales", salary: 45000, mobile_no: "9876543214" }
+])
+
+// Create index on emp_name
+db.employee_details.createIndex({ emp_name: 1 })
+
+// View created indexes
+db.employee_details.getIndexes()
+
+// Aggregation: total salary by department
+db.employee_details.aggregate([
+  { $group: { _id: "$dept", totalSalary: { $sum: "$salary" } } },
+  { $sort: { totalSalary: -1 } }
+])
+
+// Aggregation: average salary by department
+db.employee_details.aggregate([
+  { $group: { _id: "$dept", avgSalary: { $avg: "$salary" } } }
+])
