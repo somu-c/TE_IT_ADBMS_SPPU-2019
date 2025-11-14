@@ -1,0 +1,32 @@
+use employeeDB
+
+// Insert sample documents
+db.employee_details.insertMany([
+  { emp_id: 1, emp_name: "Tanvi", dept: "IT", salary: 72000, mobile_no: "9876543210" },
+  { emp_id: 2, emp_name: "Riya",  dept: "HR", salary: 48000, mobile_no: "9876543211" },
+  { emp_id: 3, emp_name: "Aman",  dept: "Finance", salary: 61000, mobile_no: "9876543212" },
+  { emp_id: 4, emp_name: "Karan", dept: "IT", salary: 53000, mobile_no: "9876543213" },
+  { emp_id: 5, emp_name: "Nisha", dept: "Sales", salary: 45000, mobile_no: "9876543214" },
+  { emp_id: 6, emp_name: "Sana",  dept: "HR", salary: 39000, mobile_no: "9876543215" }
+])
+
+// 1) AND: Find employees in IT department with salary > 50000
+db.employee_details.find({ $and [dept: "IT", salary: { $gt: 50000 }] })
+
+// 2) OR: Find employees in IT or HR departments
+db.employee_details.find({ $or: [ { dept: "IT" }, { dept: "HR" } ] })
+
+// 3) SORT: Display all employees sorted by salary (descending)
+db.employee_details.find().sort({ salary: -1 })
+
+// 4) SORT + LIMIT: Top 2 highest paid employees
+db.employee_details.find().sort({ salary: -1 }).limit(2)
+
+// 5) SKIP + LIMIT: Skip first 2 documents, then show next 2
+db.employee_details.find().skip(2).limit(2)
+
+// 6) GREATER THAN: Employees with salary greater than 40000
+db.employee_details.find({ salary: { $gt: 40000 } })
+
+// 7) LESS THAN / EQUAL: Employees with salary less than or equal to 50000
+db.employee_details.find({ salary: { $lte: 50000 } })
