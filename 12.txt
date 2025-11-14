@@ -1,0 +1,194 @@
+#include <stdio.h>
+#include <limits.h>
+
+struct Process {
+    int pid;
+    int at;   // Arrival Time
+    int bt;   // Burst Time
+    int ct;   // Completion Time
+    int tat;  // Turnaround Time
+    int wt;   // Waiting Time
+    int rt;   // Remaining Time (used in RR)
+};
+
+// ---------- Gantt Chart Function ----------
+void printGanttChart(int pid[], int time[], int count) {
+    int i;
+
+    // Top border
+    for (i = 0; i < count; i++) printf("+-----");
+    printf("+\n");
+
+    // Process IDs
+    for (i = 0; i < count; i++) printf("| P%-2d ", pid[i]);
+    printf("|\n");
+
+    // Bottom border
+    for (i = 0; i < count; i++) printf("+-----");
+    printf("+\n");
+
+    // Time labels
+    for (i = 0; i <= count; i++) printf("%-6d", time[i]);
+    printf("\n");
+}
+
+// ---------- SJF Non-Preemptive ----------
+void sjf_non_preemptive(struct Process p[], int n) {
+    printf("\n================ SJF (Non-Preemptive) SCHEDULING ================\n");
+
+    int completed = 0, time = 0, min_bt, index;
+    int is_completed[50] = {0};
+    int gcPID[50], gcTime[50], gcIndex = 0;
+    gcTime[0] = 0;
+
+    while (completed != n) {
+        min_bt = INT_MAX;
+        index = -1;
+
+        for (int i = 0; i < n; i++) {
+            if (p[i].at <= time && is_completed[i] == 0) {
+                if (p[i].bt < min_bt) {
+                    min_bt = p[i].bt;
+                    index = i;
+                } else if (p[i].bt == min_bt && p[i].at < p[index].at)
+                    index = i;
+            }
+        }
+
+        if (index == -1) {
+            time++;
+            continue;
+        }
+
+        gcPID[gcIndex] = p[index].pid;
+        if (gcIndex == 0 && time < p[index].at)
+            gcTime[gcIndex] = p[index].at;
+        gcIndex++;
+
+        time += p[index].bt;
+        p[index].ct = time;
+        p[index].tat = p[index].ct - p[index].at;
+        p[index].wt = p[index].tat - p[index].bt;
+        is_completed[index] = 1;
+        completed++;
+
+        gcTime[gcIndex] = time;
+    }
+
+    printf("\nGantt Chart:\n");
+    printGanttChart(gcPID, gcTime, gcIndex);
+
+    printf("\nPID\tAT\tBT\tCT\tTAT\tWT");
+    float avgTAT = 0, avgWT = 0;
+    for (int i = 0; i < n; i++) {
+        printf("\nP%d\t%d\t%d\t%d\t%d\t%d",
+               p[i].pid, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+        avgTAT += p[i].tat;
+        avgWT += p[i].wt;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f", avgTAT / n);
+    printf("\nAverage Waiting Time: %.2f\n", avgWT / n);
+}
+
+// ---------- Round Robin Scheduling ----------
+void round_robin(struct Process p[], int n, int tq) {
+    printf("\n================ ROUND ROBIN SCHEDULING ================\n");
+
+    int gcPID[200], gcTime[200], gcIndex = 0;
+    int time = 0, completed = 0;
+    int queue[100], front = 0, rear = 0;
+    int visited[50] = {0};
+
+    for (int i = 0; i < n; i++) p[i].rt = p[i].bt;
+
+    queue[rear++] = 0;
+    visited[0] = 1;
+    gcTime[0] = 0;
+
+    while (completed != n) {
+        if (front == rear) {
+            time++;
+            for (int i = 0; i < n; i++) {
+                if (p[i].at <= time && p[i].rt > 0 && !visited[i]) {
+                    queue[rear++] = i;
+                    visited[i] = 1;
+                }
+            }
+            continue;
+        }
+
+        int i = queue[front++];
+        if (time < p[i].at)
+            time = p[i].at;
+
+        gcPID[gcIndex] = p[i].pid;
+        gcIndex++;
+
+        if (p[i].rt <= tq) {
+            time += p[i].rt;
+            p[i].rt = 0;
+            p[i].ct = time;
+            p[i].tat = p[i].ct - p[i].at;
+            p[i].wt = p[i].tat - p[i].bt;
+            completed++;
+        } else {
+            p[i].rt -= tq;
+            time += tq;
+        }
+
+        gcTime[gcIndex] = time;
+
+        // Enqueue new arrivals
+        for (int j = 0; j < n; j++) {
+            if (p[j].at <= time && p[j].rt > 0 && !visited[j]) {
+                queue[rear++] = j;
+                visited[j] = 1;
+            }
+        }
+
+        // Re-add current process if not finished
+        if (p[i].rt > 0)
+            queue[rear++] = i;
+    }
+
+    printf("\nGantt Chart:\n");
+    printGanttChart(gcPID, gcTime, gcIndex);
+
+    printf("\nPID\tAT\tBT\tCT\tTAT\tWT");
+    float avgTAT = 0, avgWT = 0;
+    for (int i = 0; i < n; i++) {
+        printf("\nP%d\t%d\t%d\t%d\t%d\t%d",
+               p[i].pid, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+        avgTAT += p[i].tat;
+        avgWT += p[i].wt;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f", avgTAT / n);
+    printf("\nAverage Waiting Time: %.2f\n", avgWT / n);
+}
+
+// ---------- MAIN ----------
+int main() {
+    int n, tq;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    struct Process p[n], copy[n];
+
+    for (int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        printf("Enter Arrival Time and Burst Time for Process %d: ", i + 1);
+        scanf("%d %d", &p[i].at, &p[i].bt);
+    }
+
+    printf("Enter Time Quantum for Round Robin: ");
+    scanf("%d", &tq);
+
+    // Copy data for SJF
+    for (int i = 0; i < n; i++) copy[i] = p[i];
+
+    sjf_non_preemptive(copy, n);
+    round_robin(p, n, tq);
+
+    return 0;
+}

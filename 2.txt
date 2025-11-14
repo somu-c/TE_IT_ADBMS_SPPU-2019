@@ -1,0 +1,114 @@
+#!/bin/bash
+
+empid=0
+name=""
+dept=""
+salary=0
+n=0
+ch=0
+
+while [ $ch -ne 7 ]
+do
+    echo -e "\nEmployee Database\n-----------------"
+    echo -e "1. Create Database"
+    echo -e "2. View Database"
+    echo -e "3. Insert a record"
+    echo -e "4. Delete a record"
+    echo -e "5. Search a record"
+    echo -e "6. Modify a record"
+    echo -e "7. Exit"
+    echo -e "\nEnter your choice:"
+    read ch
+
+    case $ch in
+        1)
+            echo -e "\nEnter the File name for employee database:"
+            read fname
+            touch $fname
+            echo -e "\nEnter the number of employee records to be entered in $fname:"
+            read n
+            i=$n
+            while [ $i -ne 0 ]
+            do
+                echo -e "\nEnter Employee ID:"
+                read empid
+                echo -e "\nEnter Employee Name:"
+                read name
+                echo -e "\nEnter Department:"
+                read dept
+                echo -e "\nEnter Salary:"
+                read salary
+                echo -e "$empid\t$name\t$dept\t$salary" >> $fname
+                echo -e "\nRecord stored successfully."
+                i=$(($i - 1))
+            done
+            ;;
+        2)
+            echo -e "\nEmpID\tName\tDepartment\tSalary"
+            cat $fname
+            ;;
+        3)
+            echo -e "\nEnter Employee ID:"
+            read empid
+            echo -e "\nEnter Employee Name:"
+            read name
+            echo -e "\nEnter Department:"
+            read dept
+            echo -e "\nEnter Salary:"
+            read salary
+            echo -e "$empid\t$name\t$dept\t$salary" >> $fname
+            echo -e "\nRecord added successfully."
+            ;;
+        4)
+            echo -e "\nEnter the Employee ID of the record to be deleted:"
+            read id
+            if grep -w "$id" "$fname" > /dev/null
+            then
+                grep -v -w "$id" "$fname" > temp
+                mv temp "$fname"
+                echo -e "\nRecord deleted successfully."
+            else
+                echo -e "\nRecord not found."
+            fi
+            ;;
+        5)
+            echo -e "\nEnter the Employee ID to search:"
+            read id
+            if grep -w "$id" "$fname"
+            then
+                echo -e "\nRecord found:"
+                grep -w "$id" "$fname"
+            else
+                echo -e "\nRecord not found."
+            fi
+            ;;
+        6)
+            echo -e "\nEnter the Employee ID of the record to modify:"
+            read id
+            if grep -w "$id" "$fname" > /dev/null
+            then
+                grep -v -w "$id" "$fname" > temp
+                echo -e "\nEnter new Employee ID:"
+                read empid
+                echo -e "\nEnter new Name:"
+                read name
+                echo -e "\nEnter new Department:"
+                read dept
+                echo -e "\nEnter new Salary:"
+                read salary
+                echo -e "$empid\t$name\t$dept\t$salary" >> temp
+                mv temp "$fname"
+                echo -e "\nRecord modified successfully."
+            else
+                echo -e "\nRecord not found."
+            fi
+            ;;
+        7)
+            echo "Exiting Employee Database program..! "
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice. Try again."
+            ;;
+    esac
+done

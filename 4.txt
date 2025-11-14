@@ -1,0 +1,106 @@
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+void quicksort(int a[], int first, int last);
+
+int main()
+{
+    int pid, a[10], size, i;
+
+    printf("\nPARENT: My process-id is %d.", getpid());
+    printf("\n\nEnter the number of elements in the array: ");
+    scanf("%d", &size);
+
+    printf("Enter %d elements: ", size);
+    for(i = 0; i < size; i++)
+        scanf("%d", &a[i]);
+
+    printf("\nForking now!\n");
+
+    pid = fork();
+
+    if(pid == 0)      // CHILD PROCESS
+    {
+        printf("\nCHILD: My process-id is %d.", getpid());
+        printf("\nCHILD: My parent's process-id is %d.", getppid());
+
+        quicksort(a, 0, size - 1);
+
+        printf("\nCHILD: Sorted elements: ");
+        for(i = 0; i < size; i++)
+            printf("%d ", a[i]);
+
+        // ------------ ORPHAN CASE --------------
+        // printf("\nCHILD: I am sleeping now...");
+        // sleep(10);
+        // printf("\n(Child still alive, parent gone) -- ORPHAN\n");
+        // system("ps -elf | grep a.out");
+
+        // ------------ ZOMBIE CASE --------------
+        printf("\nCHILD: I am dying now...");
+        printf("\n---\n");
+        exit(0);   // child exits, parent not waiting -> zombie
+    }
+
+    else if(pid > 0)   // PARENT PROCESS
+    {
+        // ------------ NORMAL CASE --------------
+        // wait(NULL);   // parent waits, no zombie
+        // printf("\nPARENT: I am back after wait.");
+
+        // ------------ ORPHAN CASE --------------
+        // printf("\nPARENT: I am dying early...");
+        // printf("\n---\n");
+        // exit(0);
+
+        // ------------ ZOMBIE CASE --------------
+        printf("\nPARENT: I am sleeping now (not calling wait)...");
+        sleep(10);     // parent sleeps, child becomes zombie
+        printf("\n---\n");
+        system("ps -elf | grep a.out");
+
+        printf("\nPARENT: Now I am dying...");
+        printf("\n---\n");
+        exit(0);
+    }
+
+    return 0;
+}
+
+void quicksort(int a[], int first, int last)
+{
+    int pivot, i, j, temp;
+
+    if(first < last)
+    {
+        pivot = first;
+        i = first;
+        j = last;
+
+        while(i < j)
+        {
+            while(a[i] <= a[pivot] && i < last)
+                i++;
+
+            while(a[j] > a[pivot])
+                j--;
+
+            if(i < j)
+            {
+                temp = a[i];
+                a[i] = a[j];
+                a[j] = temp;
+            }
+        }
+
+        temp = a[pivot];
+        a[pivot] = a[j];
+        a[j] = temp;
+
+        quicksort(a, first, j - 1);
+        quicksort(a, j + 1, last);
+    }
+}

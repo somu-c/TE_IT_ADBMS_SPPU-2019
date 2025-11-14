@@ -1,0 +1,162 @@
+#include <stdio.h>
+#include <limits.h>
+
+struct Process {
+    int pid;
+    int at;   // Arrival Time
+    int bt;   // Burst Time
+    int ct;   // Completion Time
+    int tat;  // Turnaround Time
+    int wt;   // Waiting Time
+    int rt;   // Remaining Time (unused for non-preemptive)
+};
+
+// Function to print Gantt Chart in box style
+void printGanttChart(int pid[], int time[], int count) {
+    int i;
+
+    // Top border
+    for (i = 0; i < count; i++) printf("+-----");
+    printf("+\n");
+
+    // Process IDs
+    for (i = 0; i < count; i++) printf("| P%-2d ", pid[i]);
+    printf("|\n");
+
+    // Bottom border
+    for (i = 0; i < count; i++) printf("+-----");
+    printf("+\n");
+
+    // Time labels
+    for (i = 0; i <= count; i++) printf("%-6d", time[i]);
+    printf("\n");
+}
+
+// ---------- FCFS Scheduling ----------
+void fcfs(struct Process p[], int n) {
+    printf("\n================ FCFS SCHEDULING ================\n");
+
+    // Sort by arrival time
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (p[i].at > p[j].at) {
+                struct Process tmp = p[i];
+                p[i] = p[j];
+                p[j] = tmp;
+            }
+        }
+    }
+
+    int time = 0;
+    if (p[0].at > 0) time = p[0].at;
+
+    int gcPID[50], gcTime[50];
+    int gcIndex = 0;
+    gcTime[0] = time;
+
+    for (int i = 0; i < n; i++) {
+        if (time < p[i].at) time = p[i].at;
+        time += p[i].bt;
+        p[i].ct = time;
+        p[i].tat = p[i].ct - p[i].at;
+        p[i].wt = p[i].tat - p[i].bt;
+
+        gcPID[gcIndex] = p[i].pid;
+        gcIndex++;
+        gcTime[gcIndex] = time;
+    }
+
+    printf("\nGantt Chart:\n");
+    printGanttChart(gcPID, gcTime, gcIndex);
+
+    printf("\nPID\tAT\tBT\tCT\tTAT\tWT");
+    float avgTAT = 0, avgWT = 0;
+    for (int i = 0; i < n; i++) {
+        printf("\nP%d\t%d\t%d\t%d\t%d\t%d", p[i].pid, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+        avgTAT += p[i].tat;
+        avgWT += p[i].wt;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f", avgTAT / n);
+    printf("\nAverage Waiting Time: %.2f\n", avgWT / n);
+}
+
+// ---------- SJF Non-Preemptive ----------
+void sjf_non_preemptive(struct Process p[], int n) {
+    printf("\n================ SJF (Non-Preemptive) SCHEDULING ================\n");
+
+    int completed = 0, time = 0, min_bt, index;
+    int is_completed[50] = {0};
+    int gcPID[50], gcTime[50], gcIndex = 0;
+    gcTime[0] = 0;
+
+    while (completed != n) {
+        min_bt = INT_MAX;
+        index = -1;
+
+        for (int i = 0; i < n; i++) {
+            if (p[i].at <= time && is_completed[i] == 0) {
+                if (p[i].bt < min_bt) {
+                    min_bt = p[i].bt;
+                    index = i;
+                } else if (p[i].bt == min_bt) {
+                    if (p[i].at < p[index].at)
+                        index = i;
+                }
+            }
+        }
+
+        if (index == -1) {
+            time++;
+            continue;
+        }
+
+        gcPID[gcIndex] = p[index].pid;
+        if (gcIndex == 0 && time < p[index].at)
+            gcTime[gcIndex] = p[index].at;
+        gcIndex++;
+
+        time += p[index].bt;
+        p[index].ct = time;
+        p[index].tat = p[index].ct - p[index].at;
+        p[index].wt = p[index].tat - p[index].bt;
+        is_completed[index] = 1;
+        completed++;
+
+        gcTime[gcIndex] = time;
+    }
+
+    printf("\nGantt Chart:\n");
+    printGanttChart(gcPID, gcTime, gcIndex);
+
+    printf("\nPID\tAT\tBT\tCT\tTAT\tWT");
+    float avgTAT = 0, avgWT = 0;
+    for (int i = 0; i < n; i++) {
+        printf("\nP%d\t%d\t%d\t%d\t%d\t%d",
+               p[i].pid, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+        avgTAT += p[i].tat;
+        avgWT += p[i].wt;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f", avgTAT / n);
+    printf("\nAverage Waiting Time: %.2f\n", avgWT / n);
+}
+
+// ---------- MAIN ----------
+int main() {
+    int n;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    struct Process p[n];
+
+    for (int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        printf("Enter Arrival Time and Burst Time for Process %d: ", i + 1);
+        scanf("%d %d", &p[i].at, &p[i].bt);
+    }
+
+    fcfs(p, n);
+    sjf_non_preemptive(p, n);
+
+    return 0;
+}

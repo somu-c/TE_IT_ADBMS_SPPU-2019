@@ -1,0 +1,433 @@
+FCFS Disk Scheduling Algorithm :
+
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+ int n, i, head, total_movement = 0;
+ printf("Enter number of disk requests: ");
+ scanf("%d", &n);
+ int requests[n];
+ printf("Enter the request sequence: ");
+ for (i = 0; i < n; i++) {
+ scanf("%d", &requests[i]);
+ }
+ printf("Enter initial head position: ");
+ scanf("%d", &head);
+ printf("\nDisk Sequence: %d", head);
+ for (i = 0; i < n; i++) {
+ total_movement += abs(requests[i] - head);
+ head = requests[i];
+ printf(" %d", head);
+ }
+ printf("\n\nTotal Head Movement: %d", total_movement);
+ printf("\nAverage Seek Time: %.2f\n", (float)total_movement / n);
+ return 0;
+}
+Output :
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ gcc fcfs.c
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ ./a.out
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Disk Sequence: 53 98 183 37 122 14 124 65 67
+Total Head Movement: 640
+Average Seek Time: 80.00
+
+
+SSTF Disk Scheduling Algorithm :
+
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+ int n, i, head, total_movement = 0, completed = 0, min, pos, diff;
+ printf("Enter number of disk requests: ");
+ scanf("%d", &n);
+ int requests[n], visited[n];
+ printf("Enter the request sequence: ");
+ for (i = 0; i < n; i++) {
+ scanf("%d", &requests[i]);
+ visited[i] = 0; // initially not served
+ }
+ printf("Enter initial head position: ");
+ scanf("%d", &head);
+ printf("\nSeek Sequence: %d", head);
+ while (completed < n) {
+ min = 9999;
+ pos = -1;
+ // Find the nearest unvisited request
+ for (i = 0; i < n; i++) {
+ if (!visited[i]) {
+ diff = abs(head - requests[i]);
+ if (diff < min) {
+ min = diff;
+ pos = i;
+ }
+ }
+ }
+ visited[pos] = 1;
+ total_movement += min;
+ head = requests[pos];
+ completed++;
+ printf(" %d", head);
+ }
+ printf("\n\nTotal Head Movement: %d", total_movement);
+ printf("\nAverage Seek Time: %.2f\n", (float)total_movement / n);
+ return 0;
+}
+Output :
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ gcc sstf.c
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ ./a.out
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Seek Sequence: 53 65 67 37 14 98 122 124 183
+Total Head Movement: 236
+Average Seek Time: 29.50
+
+
+SCAN Disk Scheduling Algorithm :
+
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+ int n, i, j, head, total_movement = 0, disk_size, direction, index = 0;
+ printf("Enter number of disk requests: ");
+ scanf("%d", &n);
+ int requests[n];
+ printf("Enter the request sequence: ");
+ for (i = 0; i < n; i++)
+ scanf("%d", &requests[i]);
+ printf("Enter initial head position: ");
+ scanf("%d", &head);
+ printf("Enter total disk size: ");
+ scanf("%d", &disk_size);
+ printf("Enter head movement direction (1 for high/right, 0 for low/left): ");
+ scanf("%d", &direction);
+ // Add only the required boundary (0 or max disk size)
+ int size = n + 1;
+ int arr[size];
+ for (i = 0; i < n; i++)
+ arr[i] = requests[i];
+ if (direction == 1)
+ arr[n] = disk_size - 1; // only max end
+ else
+ arr[n] = 0; // only min end
+ // Sort the array
+ for (i = 0; i < size - 1; i++) {
+ for (j = i + 1; j < size; j++) {
+ if (arr[i] > arr[j]) {
+ int temp = arr[i];
+ arr[i] = arr[j];
+ arr[j] = temp;
+ }
+ }
+ }
+ // Find the index where head should start
+ for (i = 0; i < size; i++) {
+ if (head < arr[i]) {
+ index = i;
+ break;
+ }
+ }
+ printf("\nSeek Sequence: %d", head);
+ if (direction == 1) { // Move right first
+ for (i = index; i < size; i++) {
+ total_movement += abs(head - arr[i]);
+ head = arr[i];
+ printf(" %d", head);
+ }
+ for (i = index - 1; i >= 0; i--) {
+ total_movement += abs(head - arr[i]);
+ head = arr[i];
+ printf(" %d", head);
+ }
+ } else { // Move left first
+ for (i = index - 1; i >= 0; i--) {
+ total_movement += abs(head - arr[i]);
+ head = arr[i];
+ printf(" %d", head);
+ }
+ for (i = index; i < size; i++) {
+ total_movement += abs(head - arr[i]);
+ head = arr[i];
+ printf(" %d", head);
+ }
+ }
+ printf("\n\nTotal Head Movement: %d", total_movement);
+ printf("\nAverage Seek Time: %.2f\n", (float)total_movement / n);
+ return 0;
+}
+Output :
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ gcc scan.c
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ ./a.out
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Enter total disk size: 200
+Enter head movement direction (1 for high/right, 0 for low/left): 0
+Seek Sequence: 53 37 14 0 65 67 98 122 124 183
+Total Head Movement: 236
+Average Seek Time: 29.50
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Enter total disk size: 200
+Enter head movement direction (1 for high/right, 0 for low/left): 1
+Seek Sequence: 53 65 67 98 122 124 183 199 37 14
+Total Head Movement: 331
+Average Seek Time: 41.38
+
+
+C - SCAN Disk Scheduling Algorithm :
+
+
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+ int n, i, j, head, total_movement = 0, disk_size, direction, index;
+ printf("Enter number of disk requests: ");
+ scanf("%d", &n);
+ int requests[n];
+ printf("Enter the request sequence: ");
+ for (i = 0; i < n; i++)
+ scanf("%d", &requests[i]);
+ printf("Enter initial head position: ");
+ scanf("%d", &head);
+ printf("Enter total disk size: ");
+ scanf("%d", &disk_size);
+ printf("Enter head movement direction (1 for high/right, 0 for low/left): ");
+ scanf("%d", &direction);
+ // Add boundaries
+ int size = n + 2;
+ int arr[size];
+ for (i = 0; i < n; i++)
+ arr[i] = requests[i];
+ arr[n] = 0;
+ arr[n + 1] = disk_size - 1;
+ // Sort requests
+ for (i = 0; i < size - 1; i++) {
+ for (j = i + 1; j < size; j++) {
+ if (arr[i] > arr[j]) {
+ int temp = arr[i];
+ arr[i] = arr[j];
+ arr[j] = temp;
+ }
+ }
+ }
+ // Find head index
+ for (i = 0; i < size; i++) {
+ if (head < arr[i]) {
+ index = i;
+ break;
+ }
+ }
+ printf("\nSeek Sequence: %d", head);
+ if (direction == 1) { // Move toward higher track numbers
+ for (i = index; i < size; i++) {
+ total_movement += abs(head - arr[i]);
+ head = arr[i];
+ printf(" %d", head);
+ }
+ // Jump to beginning
+ total_movement += abs(disk_size - 1 - 0);
+ head = 0;
+ printf(" 0");
+ for (i = 0; i < index; i++) {
+ total_movement += abs(head - arr[i]);
+ head = arr[i];
+ printf(" %d", head);
+ }
+ } else { // Move toward lower track numbers
+ for (i = index - 1; i >= 0; i--) {
+ total_movement += abs(head - arr[i]);
+ head = arr[i];
+ printf(" %d", head);
+ }
+ // Jump to end
+ total_movement += abs((disk_size - 1) - 0);
+ head = disk_size - 1;
+ printf(" %d", head);
+ for (i = size - 2; i >= index; i--) {
+ total_movement += abs(head - arr[i]);
+ head = arr[i];
+ printf(" %d", head);
+ }
+ }
+ printf("\n\nTotal Head Movement: %d", total_movement);
+ printf("\nAverage Seek Time: %.2f\n", (float)total_movement / n);
+ return 0;
+}
+Output :
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ gcc cscan.c
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ ./a.out
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Enter total disk size: 200
+Enter head movement direction (1 for high/right, 0 for low/left): 0
+Seek Sequence: 53 37 14 0 199 183 124 122 98 67 65
+Total Head Movement: 386
+Average Seek Time: 48.25
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Enter total disk size: 200
+Enter head movement direction (1 for high/right, 0 for low/left): 1
+Seek Sequence: 53 65 67 98 122 124 183 199 0 14 37
+Total Head Movement: 382
+Average Seek Time: 47.75
+
+
+LOOK Disk Scheduling Algorithm :
+
+
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+ int n, i, j, head, total_movement = 0, index = 0;
+ printf("Enter number of disk requests: ");
+ scanf("%d", &n);
+ int requests[n];
+ printf("Enter the request sequence: ");
+ for (i = 0; i < n; i++)
+ scanf("%d", &requests[i]);
+ printf("Enter initial head position: ");
+ scanf("%d", &head);
+ // Sort the requests in ascending order
+ for (i = 0; i < n - 1; i++) {
+ for (j = i + 1; j < n; j++) {
+ if (requests[i] > requests[j]) {
+ int temp = requests[i];
+ requests[i] = requests[j];
+ requests[j] = temp;
+ }
+ }
+ }
+ // Find the index where the head fits in the sorted list
+ for (i = 0; i < n; i++) {
+ if (head < requests[i]) {
+ index = i;
+ break;
+ }
+ }
+ // If head is larger than all requests
+ if (index == 0 && head > requests[n - 1])
+ index = n;
+ printf("\nSeek Sequence: %d", head);
+ // Step 1: Move right from the head
+ for (i = index; i < n; i++) {
+ total_movement += abs(head - requests[i]);
+ head = requests[i];
+ printf(" %d", head);
+ }
+ // Step 2: Reverse direction and service remaining (left side)
+ for (i = index - 1; i >= 0; i--) {
+ total_movement += abs(head - requests[i]);
+ head = requests[i];
+ printf(" %d", head);
+ }
+ printf("\n\nTotal Head Movement: %d", total_movement);
+ printf("\nAverage Seek Time: %.2f\n", (float)total_movement / n);
+ return 0;
+}
+Output :
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ gcc look.c
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ ./a.out
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Seek Sequence: 53 65 67 98 122 124 183 37 14
+Total Head Movement: 299
+Average Seek Time: 37.38
+
+
+C - LOOK Disk Scheduling Algorithm :
+
+
+#include <stdio.h>
+#include <stdlib.h>
+int main() {
+ int n, i, j, head, total_movement = 0, direction, index;
+ printf("Enter number of disk requests: ");
+ scanf("%d", &n);
+ int requests[n];
+ printf("Enter the request sequence: ");
+ for (i = 0; i < n; i++)
+ scanf("%d", &requests[i]);
+ printf("Enter initial head position: ");
+ scanf("%d", &head);
+ printf("Enter head movement direction (1 for high/right, 0 for low/left): ");
+ scanf("%d", &direction);
+ // Sort requests
+ for (i = 0; i < n - 1; i++) {
+ for (j = i + 1; j < n; j++) {
+ if (requests[i] > requests[j]) {
+ int temp = requests[i];
+ requests[i] = requests[j];
+ requests[j] = temp;
+ }
+ }
+ }
+ // Find index of first request greater than head
+ for (i = 0; i < n; i++) {
+ if (head < requests[i]) {
+ index = i;
+ break;
+ }
+ }
+ printf("\nSeek Sequence: %d", head);
+ // Move towards higher tracks
+ if (direction == 1) {
+ for (i = index; i < n; i++) {
+ total_movement += abs(head - requests[i]);
+ head = requests[i];
+ printf(" %d", head);
+ }
+ // Jump to the lowest request
+ total_movement += abs(head - requests[0]);
+ head = requests[0];
+ printf(" %d", head);
+ for (i = 1; i < index; i++) {
+ total_movement += abs(head - requests[i]);
+ head = requests[i];
+ printf(" %d", head);
+ }
+ }
+ // Move towards lower tracks
+ else {
+ for (i = index - 1; i >= 0; i--) {
+ total_movement += abs(head - requests[i]);
+ head = requests[i];
+ printf(" %d", head);
+ }
+ // Jump to the highest request
+ total_movement += abs(head - requests[n - 1]);
+ head = requests[n - 1];
+ printf(" %d", head);
+ for (i = n - 2; i >= index; i--) {
+ total_movement += abs(head - requests[i]);
+ head = requests[i];
+ printf(" %d", head);
+ }
+ }
+ printf("\n\nTotal Head Movement: %d", total_movement);
+ printf("\nAverage Head Movement: %.2f\n", (float)total_movement / n);
+ return 0;
+}
+Output :
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ gcc clook.c
+bvcoew@bvcoew-OptiPlex-3000:~/Documents$ ./a.out
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Enter head movement direction (1 for high/right, 0 for low/left): 1
+Seek Sequence: 53 65 67 98 122 124 183 14 37
+Total Head Movement: 322
+Average Head Movement: 40.25
+Enter number of disk requests: 8
+Enter the request sequence: 98 183 37 122 14 124 65 67
+Enter initial head position: 53
+Enter head movement direction (1 for high/right, 0 for low/left): 0
+Seek Sequence: 53 37 14 183 124 122 98 67 65
+Total Head Movement: 326
+Average Head Movement: 40.75

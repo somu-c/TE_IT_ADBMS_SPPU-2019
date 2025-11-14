@@ -1,0 +1,99 @@
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#define MAX_BUFFER 1024
+int main() {
+ int fd, wr;
+ char *avfifo = "avfifo";
+ char *avfifol = "avfifol";
+ char buff[MAX_BUFFER], str[MAX_BUFFER];
+ int words = 1, n = 0, i = 0, line = 1, c = 0;
+ FILE *fp;
+ int fdl;
+ // Create the FIFOs (named pipes)
+ mkfifo(avfifo, 0666);
+ mkfifo(avfifol, 0666);
+ // Open FIFO for reading and writing
+ fd = open(avfifo, O_RDWR);
+ if (fd == -1) {
+ perror("Failed to open avfifo");
+ return 1;
+ }
+ printf("Enter a sentence ending with '0':\n");
+ // Read input until '0' is encountered
+ while (1) {
+ char ch;
+ scanf("%c", &ch);
+ str[i++] = ch;
+ if (ch == '0' || i >= MAX_BUFFER - 1) {
+ str[i] = '\0';
+ break;
+ }
+ }
+ // Write the string into the FIFO
+ write(fd, str, strlen(str) + 1);
+ // Read back from the FIFO
+ read(fd, buff, MAX_BUFFER);
+ printf("\nFirst Message received: %s\n", buff);
+ // Count characters, words, and lines until '0'
+ i = 0;
+ words = 0;
+ line = 1;
+ c = 0;
+ while (buff[i] != '0' && buff[i] != '\0') {
+ c++;
+ if (buff[i] == ' ' || buff[i] == '\t' || buff[i] == '\n') {
+ // If previous character is not space or newline, count word
+ if (i > 0 && buff[i-1] != ' ' && buff[i-1] != '\n' && buff[i-1] != '\t') {
+ words++;
+ }
+ }
+ if (buff[i] == '\n') {
+ line++;
+ }
+ i++;
+ }
+ // If last character before '0' is not space or newline, count last word
+ if (i > 0 && buff[i-1] != ' ' && buff[i-1] != '\n' && buff[i-1] != '\t') {
+ words++;
+ }
+ printf("\nTotal characters: %d\n", c);
+ printf("Total words: %d\n", words);
+ printf("Total lines: %d\n", line);
+ // Write statistics to a file
+ fp = fopen("test.txt", "w");
+ if (fp == NULL) {
+ perror("Failed to open test.txt");
+ close(fd);
+ return 1;
+ }
+ fprintf(fp, "Total characters: %d\n", c);
+ fprintf(fp, "Total words: %d\n", words);
+ fprintf(fp, "Total lines: %d\n", line);
+ fputs("This is testing for fputs...\n", fp);
+ fclose(fp);
+ close(fd);
+ // Open second FIFO to write the counts
+ fdl = open(avfifol, O_RDWR);
+ if (fdl == -1) {
+ perror("Failed to open avfifol");
+ return 1;
+ }
+ wr = write(fdl, &c, sizeof(c));
+ if (wr == -1) {
+ perror("Error writing characters count to second pipe");
+ }
+ wr = write(fdl, &words, sizeof(words));
+ if (wr == -1) {
+ perror("Error writing words count to second pipe");
+ }
+ wr = write(fdl, &line, sizeof(line));
+ if (wr == -1) {
+ perror("Error writing lines count to second pipe");
+ }
+ printf("Successfully written counts to second pipe.\n");
+ close(fdl);
+ return 0;
+}
