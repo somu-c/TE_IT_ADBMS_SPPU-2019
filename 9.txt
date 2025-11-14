@@ -1,0 +1,32 @@
+use studentDB
+
+// Insert sample documents
+db.student_details.insertMany([
+  { roll_no: 1, stud_name: "Tanvi", dept: "IT", mobile_no: "9876543210", marks: 85 },
+  { roll_no: 2, stud_name: "Riya", dept: "CS", mobile_no: "9876543211", marks: 78 },
+  { roll_no: 3, stud_name: "Aman", dept: "ENTC", mobile_no: "9876543212", marks: 65 },
+  { roll_no: 4, stud_name: "Karan", dept: "IT", mobile_no: "9876543213", marks: 92 },
+  { roll_no: 5, stud_name: "Nisha", dept: "CS", mobile_no: "9876543214", marks: 55 },
+  { roll_no: 6, stud_name: "Sana", dept: "IT", mobile_no: "9876543215", marks: 40 }
+])
+
+// 1) AND: Students in IT dept with marks > 60
+db.student_details.find({ dept: "IT", marks: { $gt: 60 } })
+
+// 2) OR: Students from IT or CS departments
+db.student_details.find({ $or: [ { dept: "IT" }, { dept: "CS" } ] })
+
+// 3) SORT: Display students sorted by marks (descending)
+db.student_details.find().sort({ marks: -1 })
+
+// 4) LIMIT: Display top 3 students by marks
+db.student_details.find().sort({ marks: -1 }).limit(3)
+
+// 5) SKIP + LIMIT: Skip first 2 students and show next 2
+db.student_details.find().skip(2).limit(2)
+
+// 6) GREATER THAN: Students with marks greater than 70
+db.student_details.find({ marks: { $gt: 70 } })
+
+// 7) LESS THAN: Students with marks less than 60
+db.student_details.find({ marks: { $lt: 60 } })
