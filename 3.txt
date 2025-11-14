@@ -1,0 +1,21 @@
+use Book_Details
+
+db.books.insertMany([
+  { Book_Id: 1, Title: "DBMS", No_of_pages: 250, author: "Raghu", price: 3000 },
+  { Book_Id: 2, Title: "AI Basics", No_of_pages: 200, author: "Sharma", price: 2800 },
+  { Book_Id: 3, Title: "MongoDB Guide", No_of_pages: 180, author: "Tanvi", price: 4500 },
+  { Book_Id: 4, Title: "C Programming", No_of_pages: 350, author: "Dennis", price: 2500 },
+  { Book_Id: 5, Title: "Python 101", No_of_pages: 150, author: "Guido", price: 3200 }
+])
+
+// 2) Books having price 3000 or No_of_pages 200
+db.books.find({ $or: [ { price: 3000 }, { No_of_pages: 200 } ] })
+
+// 3) Descending order of price & ascending of title
+db.books.find().sort({ price: -1, Title: 1 })
+
+// 4) Update price of book_id 3 to 500
+db.books.updateOne({ Book_Id: 3 }, { $set: { price: 500 } })
+
+// 5) Skip first 2 documents
+db.books.find().skip(2)
