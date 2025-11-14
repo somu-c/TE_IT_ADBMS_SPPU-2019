@@ -1,0 +1,22 @@
+use productDB
+
+// 1) Insert minimum 5 documents
+db.product_details.insertMany([
+  { product_id: 1, product_name: "Galaxy S23", brand: "Samsung", model: "S23", price: 75000 },
+  { product_id: 2, product_name: "iPhone 14", brand: "Apple", model: "14", price: 85000 },
+  { product_id: 3, product_name: "OnePlus 10", brand: "OnePlus", model: "10", price: 60000 },
+  { product_id: 4, product_name: "Galaxy A15", brand: "Samsung", model: "A15", price: 20000 },
+  { product_id: 5, product_name: "Realme 12", brand: "Realme", model: "12", price: 18000 }
+])
+
+// 2) Display first 3 documents
+db.product_details.find().limit(3)
+
+// 3) Display all products of brand Samsung
+db.product_details.find({ brand: "Samsung" })
+
+// 4) Display all products having price >= 500
+db.product_details.find({ price: { $gte: 500 } })
+
+// 5) Delete document of product_id 5
+db.product_details.deleteOne({ product_id: 5 })
