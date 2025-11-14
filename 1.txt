@@ -1,0 +1,88 @@
+#1
+
+use shopDB
+db.createCollection("customer_order")
+show collections
+db.customer_order.insertMany([
+  { order_id: 1, customer_id: "C1", status: "delivered", amount: 250 },
+  { order_id: 2, customer_id: "C2", status: "pending",   amount: 100 },
+  { order_id: 3, customer_id: "C1", status: "delivered", amount: 150 },
+  { order_id: 4, customer_id: "C3", status: "cancelled", amount: 80  },
+  { order_id: 5, customer_id: "C2", status: "delivered", amount: 220 },
+  { order_id: 6, customer_id: "C1", status: "pending",   amount: 130 }
+])
+db.customer_order.find().pretty()
+
+
+#MapReduce — Total amount spent by each customer
+#Map
+var mapCustomer = function() {
+  // emit customer_id as key, amount as value
+  if (this.customer_id && this.amount) {
+    emit(this.customer_id, this.amount);
+  }
+};
+#reduce 
+var reduceSum = function(key, values) {
+  // sum the array of amounts
+  return Array.sum(values);
+};
+#run MapReduce (output to a collection)
+db.customer_order.mapReduce(
+  mapCustomer,
+  reduceSum,
+  { out: "total_by_customer" })
+#view results
+db.total_by_customer.find().pretty()
+/* Example output documents:
+{ "_id" : "C1", "value" : 530 }
+{ "_id" : "C2", "value" : 320 }
+{ "_id" : "C3", "value" : 80  }
+*/
+
+
+#MapReduce — Total amount for every status
+
+var mapStatus = function() {
+  if (this.status && this.amount) {
+    emit(this.status, this.amount);
+  }
+};
+var reduceSum = function(key, values) {
+  // sum the array of amounts
+  return Array.sum(values);
+};
+db.customer_order.mapReduce(
+  mapStatus,
+  reduceSum,
+  { out: "total_by_status" }
+)
+db.total_by_status.find().pretty()
+/* Example output:
+{ "_id" : "delivered", "value" : 620 }
+{ "_id" : "pending",   "value" : 230 }
+{ "_id" : "cancelled", "value" : 80  }
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
